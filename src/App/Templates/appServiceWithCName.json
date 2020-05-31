@@ -1,0 +1,77 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appServiceName": {
+      "defaultValue": "!!INVALID!!",
+      "type": "String"
+    },
+    "location": {
+      "defaultValue": "WestEurope",
+      "type": "String"
+    },
+    "cname": {
+      "defaultValue": "!!INVALID!!",
+      "type": "String"
+    },
+    "appServicePlanId": {
+      "defaultValue": "!!INVALID!!",
+      "type": "String"
+    },
+    "sites_finaptestwebsite_serverFarmId": {
+      "defaultValue": "appServicePlanName",
+      "type": "String"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.Web/sites",
+      "kind": "app",
+      "name": "[parameters('appServiceName')]",
+      "apiVersion": "2016-08-01",
+      "location": "[parameters('location')]",
+      "scale": null,
+      "properties": {
+        "enabled": true,
+        "hostNameSslStates": [
+          {
+            "name": "[parameters('cname')]",
+            "sslState": "Enabled",
+            "virtualIP": null,
+            "thumbprint": null,
+            "toUpdate": null,
+            "hostType": "Standard"
+          }
+        ],
+        "serverFarmId": "[parameters('appServicePlanId')]",
+        "reserved": false,
+        "siteConfig": null,
+        "scmSiteAlsoStopped": false,
+        "hostingEnvironmentProfile": null,
+        "clientAffinityEnabled": true,
+        "clientCertEnabled": false,
+        "hostNamesDisabled": false,
+        "containerSize": 0,
+        "dailyMemoryTimeQuota": 0,
+        "cloningInfo": null
+      },
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Web/sites/hostNameBindings",
+      "name": "[concat(parameters('sites_finaptestwebsite_name'), '/', parameters('hostNameBindings_finaptestwebsite.azurewebsites.net_name'))]",
+      "apiVersion": "2016-08-01",
+      "location": "[parameters('location')]",
+      "scale": null,
+      "properties": {
+        "siteName": "[parameters('cname')]",
+        "domainId": null,
+        "hostNameType": "Verified"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]"
+      ]
+    }
+  ]
+}
