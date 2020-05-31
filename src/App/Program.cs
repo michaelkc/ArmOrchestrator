@@ -1,7 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using App.Logic;
 using App.Model;
+using Microsoft.Extensions.FileProviders;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -9,7 +12,7 @@ namespace App
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.Console()
@@ -17,10 +20,14 @@ namespace App
 
 
             var deployment = GenerateInCode();
-            var templatesFolder = new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, "Templates"));
-            var outputFolder = new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, "Output"));
-            var templater = new Templater(Log.Logger, templatesFolder, outputFolder);
-            templater.Generate(deployment);
+
+
+
+            var templatesFolder = Path.Combine(Environment.CurrentDirectory, "Templates");
+            var outputFolder = Path.Combine(Environment.CurrentDirectory, "Output");
+
+            var templater = new Templater(templatesFolder, outputFolder);
+            await templater.Generate(deployment);
 
             
             File.WriteAllText("deploy.json", JsonConvert.SerializeObject(deployment, Formatting.Indented));

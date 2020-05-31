@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using App.Model;
+using Microsoft.Extensions.FileProviders;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Serilog;
@@ -11,32 +13,34 @@ namespace App.Logic
     public class Templater
     {
         private readonly ILogger _logger;
-        private readonly DirectoryInfo _templatesFolder;
-        private readonly DirectoryInfo _outputFolder;
+        private readonly IFileProvider _fileProvider;
+        private readonly string _fileProviderRoot;
+        private readonly string _templatesFolder;
+        private readonly string _outputFolder;
+        private readonly Func<(string path, string contents), Task> _writeAllText;
 
-        public Templater(ILogger logger, DirectoryInfo templatesFolder, DirectoryInfo outputFolder)
+        public Templater(string templatesFolder, string outputFolder, Func<(string path, string contents), Task> writeAllText = null, IFileProvider fileProvider = null, string fileProviderRoot = @"C:\", ILogger logger = null)
         {
-            _logger = logger;
-            _templatesFolder = templatesFolder;
-            _outputFolder = outputFolder;
+            _fileProvider = fileProvider ?? new PhysicalFileProvider(fileProviderRoot);
+            _fileProviderRoot = fileProviderRoot ?? throw new ArgumentNullException(nameof(fileProviderRoot));
+            _templatesFolder = templatesFolder ?? throw new ArgumentNullException(nameof(templatesFolder));
+            _outputFolder = outputFolder ?? throw new ArgumentNullException(nameof(outputFolder));
+            _logger = logger ?? Log.Logger;
+            _writeAllText = writeAllText ?? WriteAllTextPhysical;
         }
+
+        public async Task WriteAllTextPhysical((string path, string contents) input) =>
+            await File.WriteAllTextAsync(input.path, input.contents);
+
 
         private void Validate(Deployment deployment)
         {
-            if (_templatesFolder == null || !_templatesFolder.Exists)
-            {
-                throw new Exception($"'Template folder {_templatesFolder}' does not exist");
-            }
-            if (_outputFolder == null || !_outputFolder.Exists)
-            {
-                throw new Exception($"Output folder '{_outputFolder}' does not exist");
-            }
             var missingTemplateExceptions = deployment.Subscriptions
                 .SelectMany(s => s.ResourceGroups)
                 .SelectMany(r => r.ArmResources)
-                .Select(a => Path.Combine(_templatesFolder.FullName, a.TemplateFilename))
-                .Where(f => !File.Exists(f))
-                .Select(f => new Exception($"Template file '{f}' does not exist"));
+                .Select(a => _fileProvider.GetFileInfo(ToRelativeInTemplatesFolder(a.TemplateFilename)))
+                .Where(f => !f.Exists)
+                .Select(f => new Exception($"Template file '{f.PhysicalPath}' does not exist"));
             switch (missingTemplateExceptions.Count())
             {
                 case 0: break;
@@ -45,7 +49,7 @@ namespace App.Logic
             };
         }
 
-        public void Generate(Deployment deployment)
+        public async Task Generate(Deployment deployment)
         {
             Validate(deployment);
             foreach (var sub in deployment.Subscriptions)
@@ -57,20 +61,35 @@ namespace App.Logic
                     foreach (var armRes in rg.ArmResources)
                     {
                         _logger.Information($"Templating {armRes.TemplateFilename} to {armRes.OutputFilename}");
-                        var templateFile = Path.Combine(_templatesFolder.FullName, armRes.TemplateFilename);
-                        var templateArm = JsonConvert.DeserializeObject<JObject>(File.ReadAllText(templateFile));
+                        var templateFile = ToRelativeInTemplatesFolder(armRes.TemplateFilename);
+                        
+                        var templateContents = await ReadAllText(templateFile);
+                        var templateArm = JsonConvert.DeserializeObject<JObject>(templateContents);
 
                         foreach (var replacement in armRes.JsonPathReplacements)
                         {
                             var val = (JValue)templateArm.SelectToken(replacement.Key) ?? throw new Exception("Invalid replacement Json Path: " + replacement.Key);
                             val.Value = replacement.Value;
                         }
-                        var templatedArm = JsonConvert.SerializeObject(templateArm, Newtonsoft.Json.Formatting.Indented);
-                        File.WriteAllText(Path.Combine(_outputFolder.FullName, armRes.OutputFilename), templatedArm);
+                        var templatedArm = JsonConvert.SerializeObject(templateArm, Formatting.Indented);
+                        await _writeAllText((Path.Combine(_outputFolder, armRes.OutputFilename), templatedArm));
 
                     }
                 }
             }
+        }
+        private string ToRelativeInTemplatesFolder(string filename) =>
+            Path.GetRelativePath(_fileProviderRoot, Path.Combine(_templatesFolder, filename));
+
+
+
+        private async Task<string> ReadAllText(string templateFile)
+        {
+            var file = _fileProvider.GetFileInfo(templateFile);
+            if (!file.Exists) throw new Exception($"Template file '{file.PhysicalPath}' not found");
+            using var readStream = file.CreateReadStream();
+            using var reader = new StreamReader(readStream);
+            return await reader.ReadToEndAsync();
         }
     }
 
