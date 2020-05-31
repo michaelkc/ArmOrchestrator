@@ -58,20 +58,12 @@ namespace App
                                         TemplateFilename = "appServiceWithCName.json",
                                         JsonPathReplacements =
                                         {
-                                            {"parameters.appServiceName.defaultValue","myappservice.segestest.dk"},
-                                            {"resources[0].properties.serverFarmId","somefarmid"}
+                                            {"parameters.appServiceName.defaultValue","deleteme1-dev-wa"},
+                                            {"parameters.appServicePlanId.defaultValue","/subscriptions/8a3810d4-2f5b-4b66-90ca-9e96ac3e45be/resourcegroups/agroid-common-preprod-rg/providers/Microsoft.Web/serverfarms/agroid-preprod-identityserver-asp"},
+                                            {"parameters.cname.defaultValue","armtemplater.segestest.dk"},
+                                            {"parameters.location.defaultValue","WestEurope"}
                                         }
                                     },
-                                    new AzureArmResource
-                                    {
-                                        OutputFilename = "arm2.json",
-                                        TemplateFilename = "appServiceWithCName.json",
-                                        JsonPathReplacements =
-                                        {
-                                            {"parameters.appServiceName.defaultValue","myappservice.segestest.dk"},
-                                            {"resources[0].properties.serverFarmId","somefarmid"}
-                                        }
-                                    }
                                 }
                             }
                         }

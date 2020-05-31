@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "appServiceName": {
-      "defaultValue": "!!INVALID!!",
+      "defaultValue": "deleteme1-dev-wa",
       "type": "String"
     },
     "location": {
@@ -16,10 +16,6 @@
     },
     "appServicePlanId": {
       "defaultValue": "!!INVALID!!",
-      "type": "String"
-    },
-    "sites_finaptestwebsite_serverFarmId": {
-      "defaultValue": "appServicePlanName",
       "type": "String"
     }
   },
@@ -60,7 +56,7 @@
     },
     {
       "type": "Microsoft.Web/sites/hostNameBindings",
-      "name": "[concat(parameters('sites_finaptestwebsite_name'), '/', parameters('hostNameBindings_finaptestwebsite.azurewebsites.net_name'))]",
+      "name": "[concat(parameters('appServiceName'),'/',parameters('cname'))]",
       "apiVersion": "2016-08-01",
       "location": "[parameters('location')]",
       "scale": null,
