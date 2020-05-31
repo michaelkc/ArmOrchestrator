@@ -14,15 +14,13 @@ namespace App.Logic
     {
         private readonly ILogger _logger;
         private readonly IFileProvider _fileProvider;
-        private readonly string _fileProviderRoot;
         private readonly string _templatesFolder;
         private readonly string _outputFolder;
         private readonly Func<(string path, string contents), Task> _writeAllText;
 
-        public Templater(string templatesFolder, string outputFolder, Func<(string path, string contents), Task> writeAllText = null, IFileProvider fileProvider = null, string fileProviderRoot = @"C:\", ILogger logger = null)
+        public Templater(string templatesFolder, string outputFolder, Func<(string path, string contents), Task> writeAllText = null, IFileProvider fileProvider = null, ILogger logger = null)
         {
-            _fileProvider = fileProvider ?? new PhysicalFileProvider(fileProviderRoot);
-            _fileProviderRoot = fileProviderRoot ?? throw new ArgumentNullException(nameof(fileProviderRoot));
+            _fileProvider = fileProvider ?? new PhysicalFileProvider(@"\");
             _templatesFolder = templatesFolder ?? throw new ArgumentNullException(nameof(templatesFolder));
             _outputFolder = outputFolder ?? throw new ArgumentNullException(nameof(outputFolder));
             _logger = logger ?? Log.Logger;
@@ -79,7 +77,9 @@ namespace App.Logic
             }
         }
         private string ToRelativeInTemplatesFolder(string filename) =>
-            Path.GetRelativePath(_fileProviderRoot, Path.Combine(_templatesFolder, filename));
+            Path.IsPathRooted(_templatesFolder) ? 
+                Path.GetRelativePath(@"\", Path.Combine(_templatesFolder, filename)) :
+                Path.Combine(_templatesFolder, filename);
 
 
 

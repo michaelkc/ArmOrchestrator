@@ -1,0 +1,31 @@
+{
+  "Subscriptions": [
+    {
+      "FriendlyName": "MAC MSDN",
+      "SubscriptionId": "9bb11523-611b-4341-8af2-56368f08b999",
+      "ResourceGroups": [
+        {
+          "ResourceGroup": "test-deleteme42-rg",
+          "ArmResources": [
+            {
+              "TemplateFilename": "appServiceWithCName.json",
+              "OutputFilename": "arm1.json",
+              "JsonPathReplacements": {
+                "parameters.appServiceName.defaultValue": "myappservice.segestest.dk",
+                "resources[0].properties.serverFarmId": "somefarmid"
+              }
+            },
+            {
+              "TemplateFilename": "appServiceWithCName.json",
+              "OutputFilename": "arm2.json",
+              "JsonPathReplacements": {
+                "parameters.appServiceName.defaultValue": "myappservice.segestest.dk",
+                "resources[0].properties.serverFarmId": "somefarmid"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
