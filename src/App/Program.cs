@@ -43,18 +43,19 @@ namespace App
                 {
                     new AzureSubscription
                     {
-                        SubscriptionId = "9bb11523-611b-4341-8af2-56368f08b597",
-                        FriendlyName = "MAC MSDN",
+                        SubscriptionId = "8a3810d4-2f5b-4b66-90ca-9e96ac3e45be",
+                        FriendlyName = "SEGES SYSUDV UDV",
                         ResourceGroups = new []
                         {
                             new AzureResourceGroup
                             {
-                                ResourceGroup = "test-deleteme42-rg",
+                                ResourceGroup = "cel-deletememac-debug-rg",
                                 ArmResources = new []
                                 {
                                     new AzureArmResource
                                     {
-                                        OutputFilename = "arm1.json",
+                                        PostDeployFunctions = new []{"Assert-TlsCnameBinding 8a3810d4-2f5b-4b66-90ca-9e96ac3e45be deleteme1-dev-wa armtemplater.segestest.dk" },
+                                        OutputFilename = "deleteme1-dev-wa.json",
                                         TemplateFilename = "appServiceWithCName.json",
                                         JsonPathReplacements =
                                         {

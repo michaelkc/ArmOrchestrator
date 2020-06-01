@@ -53,6 +53,13 @@ Function Get-CNameToCertificateBindingArmScript($appServiceName,$location,$cname
   
   $arm
 }
+
+function Assert-Arm($resourceGroup, $templateFile)
+{
+    &$az deployment group create --resource-group "$resourceGroup" --template-file "$templateFile" --mode Incremental
+        |ConvertFrom-Json
+}
+
 function Assert-TlsCnameBinding($subscriptionId, $appServiceName, $cname)
 {
     $appService = &$az webapp list --subscription "$subscriptionId"
@@ -74,13 +81,6 @@ function Assert-TlsCnameBinding($subscriptionId, $appServiceName, $cname)
     $arm = Get-CNameToCertificateBindingArmScript $appServiceName $location $cname $thumbprint
     $tmp = New-TemporaryFile
     $arm | Out-File $tmp.FullName
-    &$az deployment group create --resource-group "$appServiceResourceGroup" --template-file "$($tmp.FullName)" --mode Incremental
-      |ConvertFrom-Json
+    Assert-Arm $appServiceResourceGroup $($tmp.FullName)
     Remove-Item $tmp
-
-
-
 }
-
-Assert-TlsCnameBinding "8a3810d4-2f5b-4b66-90ca-9e96ac3e45be" "deleteme1-dev-wa" "armtemplater.segestest.dk"
-

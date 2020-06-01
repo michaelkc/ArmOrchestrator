@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using App.Model;
 using Microsoft.Extensions.FileProviders;
@@ -52,7 +56,10 @@ namespace App.Logic
             Validate(deployment);
             foreach (var sub in deployment.Subscriptions)
             {
-                _logger.Information($"Deploying to {sub.FriendlyName} ({sub.SubscriptionId})");
+                var b = new StringBuilder();
+                var psFunctions = await ReadAllText(@"Powershell/Functions.ps1", new EmbeddedFileProvider(Assembly.GetExecutingAssembly()));
+                b.Append(psFunctions);
+                b.AppendLine();
                 foreach (var rg in sub.ResourceGroups)
                 {
                     _logger.Information($"Deploying to {rg.ResourceGroup}");
@@ -60,7 +67,7 @@ namespace App.Logic
                     {
                         _logger.Information($"Templating {armRes.TemplateFilename} to {armRes.OutputFilename}");
                         var templateFile = ToRelativeInTemplatesFolder(armRes.TemplateFilename);
-                        
+
                         var templateContents = await ReadAllText(templateFile);
                         var templateArm = JsonConvert.DeserializeObject<JObject>(templateContents);
 
@@ -70,22 +77,31 @@ namespace App.Logic
                             val.Value = replacement.Value;
                         }
                         var templatedArm = JsonConvert.SerializeObject(templateArm, Formatting.Indented);
-                        await _writeAllText((Path.Combine(_outputFolder, armRes.OutputFilename), templatedArm));
-
+                        var templatedArmFilename = Path.Combine(_outputFolder, armRes.OutputFilename);
+                        _logger.Information($"Writing {templatedArm.Length} chars to {templatedArmFilename}");
+                        await _writeAllText((templatedArmFilename, templatedArm));
+                        b.AppendLine($"Assert-Arm '{rg.ResourceGroup}' '{Path.GetFileName(templatedArmFilename)}'");
+                        foreach (var l in armRes.PostDeployFunctions)
+                        {
+                            b.AppendLine(l);
+                        }
                     }
                 }
+                var subscriptionDeploymentFilename = Path.Combine(_outputFolder, $"{sub.FriendlyName} ({sub.SubscriptionId}).ps1");
+                _logger.Information($"Writing {b.Length} chars to {subscriptionDeploymentFilename}");
+
+                await _writeAllText((subscriptionDeploymentFilename, b.ToString()));
             }
         }
         private string ToRelativeInTemplatesFolder(string filename) =>
-            Path.IsPathRooted(_templatesFolder) ? 
+            Path.IsPathRooted(_templatesFolder) ?
                 Path.GetRelativePath(@"\", Path.Combine(_templatesFolder, filename)) :
                 Path.Combine(_templatesFolder, filename);
 
 
-
-        private async Task<string> ReadAllText(string templateFile)
+        private async Task<string> ReadAllText(string templateFile, IFileProvider overrideProvider = null)
         {
-            var file = _fileProvider.GetFileInfo(templateFile);
+            var file = (overrideProvider ?? _fileProvider).GetFileInfo(templateFile);
             if (!file.Exists) throw new Exception($"Template file '{file.PhysicalPath}' not found");
             using var readStream = file.CreateReadStream();
             using var reader = new StreamReader(readStream);
@@ -93,4 +109,4 @@ namespace App.Logic
         }
     }
 
-    }
+}
