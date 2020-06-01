@@ -62,7 +62,7 @@ namespace App.Logic
                 b.AppendLine();
                 foreach (var rg in sub.ResourceGroups)
                 {
-                    _logger.Information($"Deploying to {rg.ResourceGroup}");
+                    b.AppendLine($"Assert-ResourceGroup '{rg.ResourceGroup}' '{sub.SubscriptionId}' '{rg.Location}'");
                     foreach (var armRes in rg.ArmResources)
                     {
                         _logger.Information($"Templating {armRes.TemplateFilename} to {armRes.OutputFilename}");

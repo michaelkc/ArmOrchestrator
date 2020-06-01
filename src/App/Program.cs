@@ -49,7 +49,7 @@ namespace App
                         {
                             new AzureResourceGroup
                             {
-                                ResourceGroup = "cel-deletememac-debug-rg",
+                                ResourceGroup = "cel-deletememac2-debug-rg",
                                 ArmResources = new []
                                 {
                                     new AzureArmResource

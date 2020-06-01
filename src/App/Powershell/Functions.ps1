@@ -4,6 +4,17 @@ $ErrorActionPreference = "Stop"
 $env:HOME=""
 $az = "az"
 
+function Assert-ResourceGroup($resourceGroup, $subscriptionId, $location)
+{
+    $exists = (&$az group exists --name "$resourceGroup" --subscription "$subscriptionId")
+    if (-not ([System.Convert]::ToBoolean($exists)))
+    {
+        &$az group create --name "$resourceGroup" --subscription "$subscriptionId" --location "$location"
+            |ConvertFrom-Json   
+	}
+}
+
+
 function Assert-AppServiceManagedCertificate($appServiceResourceGroup, $appServiceName, $cname)
 {
     &$az webapp config ssl create --resource-group "$appServiceResourceGroup" --name "$appServiceName" --hostname "$cname"
@@ -39,7 +50,8 @@ Function Get-CNameToCertificateBindingArmScript($appServiceName,$location,$cname
               "iPBasedSslState":"NotConfigured",
               "hostType":"Standard"
             }
-          ]
+          ],
+        "httpsOnly": true
         },
         "dependsOn": []
       }
@@ -71,6 +83,8 @@ function Assert-TlsCnameBinding($subscriptionId, $appServiceName, $cname)
 
     # Will not recreate the cert if it is already created
     $certificate = (Assert-AppServiceManagedCertificate $appServiceResourceGroup $appServiceName $cname)
+    # Not sure what is causing color corruption, but this clears it up
+    [Console]::ResetColor()
     $thumbprint = $certificate.thumbprint
     # Due to 
     # https://github.com/Azure/azure-cli/issues/9972
