@@ -1,0 +1,94 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "collation": {
+      "defaultValue": "SQL_Latin1_General_CP1_CI_AS",
+      "type": "String"
+    },
+    "databaseName": {
+      "defaultValue": "",
+      "type": "String"
+    },
+    "skuTier": {
+      "defaultValue": "GeneralPurpose",
+      "type": "String"
+    },
+    "skuName": {
+      "defaultValue": "GP_S_Gen5",
+      "type": "String"
+    },
+    "skuFamily": {
+      "defaultValue": "Gen5",
+      "type": "String"
+    },
+    "skuCapacity": {
+      "defaultValue": 4,
+      "type": "Int"
+    },
+    "maxSizeBytes": {
+      "defaultValue": 5368709120,
+      "type": "Int"
+    },
+    "serverName": {
+      "defaultValue": "",
+      "type": "String"
+    },
+    "location": {
+      "defaultValue": "WestEurope",
+      "type": "String"
+    },
+    "zoneRedundant": {
+      "defaultValue": false,
+      "type": "Bool"
+    },
+    "readScaleOut": {
+      "defaultValue": "Disabled",
+      "type": "String"
+    },
+    "numberOfReplicas": {
+      "defaultValue": 0,
+      "type": "Int"
+    },
+    "minCapacity": {
+      "defaultValue": "0.5",
+      "type": "String"
+    },
+    "autoPauseDelay": {
+      "defaultValue": -1,
+      "type": "Int"
+    },
+    "databaseTags": {
+      "defaultValue": {},
+      "type": "Object"
+    }
+  },
+  "variables": {
+    "subscriptionId": "[subscription().subscriptionId]",
+    "resourceGroupName": "[resourceGroup().name]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Sql/servers/databases",
+      "apiVersion": "2017-10-01-preview",
+      "name": "[concat(parameters('serverName'), '/', parameters('databaseName'))]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('databaseTags')]",
+      "sku": {
+        "name": "[parameters('skuName')]",
+        "tier": "[parameters('skuTier')]",
+        "family": "[parameters('skuFamily')]",
+        "capacity": "[parameters('skuCapacity')]"
+      },
+      "properties": {
+        "collation": "[parameters('collation')]",
+        "maxSizeBytes": "[parameters('maxSizeBytes')]",
+        "zoneRedundant": "[parameters('zoneRedundant')]",
+        "readScale": "[parameters('readScaleOut')]",
+        "readReplicaCount": "[parameters('numberOfReplicas')]",
+        "minCapacity": "[parameters('minCapacity')]",
+        "autoPauseDelay": "[parameters('autoPauseDelay')]"
+      }
+    }
+  ]
+}
