@@ -80,7 +80,7 @@ namespace App.Logic
                         var templatedArmFilename = Path.Combine(_outputFolder, armRes.OutputFilename);
                         _logger.Information($"Writing {templatedArm.Length} chars to {templatedArmFilename}");
                         await _writeAllText((templatedArmFilename, templatedArm));
-                        b.AppendLine($"Assert-Arm '{rg.ResourceGroup}' '{Path.GetFileName(templatedArmFilename)}'");
+                        b.AppendLine($"Assert-Arm '{rg.ResourceGroup}' '{sub.SubscriptionId}' '{Path.GetFileName(templatedArmFilename)}'");
                         foreach (var l in armRes.PostDeployFunctions)
                         {
                             b.AppendLine(l);

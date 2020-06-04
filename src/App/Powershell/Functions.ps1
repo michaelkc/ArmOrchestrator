@@ -66,9 +66,9 @@ Function Get-CNameToCertificateBindingArmScript($appServiceName,$location,$cname
   $arm
 }
 
-function Assert-Arm($resourceGroup, $templateFile)
+function Assert-Arm($resourceGroup, $subscriptionId, $templateFile)
 {
-    &$az deployment group create --resource-group "$resourceGroup" --template-file "$templateFile" --mode Incremental
+    &$az deployment group create --resource-group "$resourceGroup" --subscription "$subscriptionId" --template-file "$templateFile" --mode Incremental
         |ConvertFrom-Json
 }
 
