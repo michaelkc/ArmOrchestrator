@@ -35,7 +35,7 @@ namespace App.Logic
             await File.WriteAllTextAsync(input.path, input.contents);
 
 
-        private void Validate(Deployment deployment)
+        private void Validate(Model.Deployment deployment)
         {
             var missingTemplateExceptions = deployment.Subscriptions
                 .SelectMany(s => s.ResourceGroups)
@@ -51,7 +51,7 @@ namespace App.Logic
             };
         }
 
-        public async Task Generate(Deployment deployment)
+        public async Task Generate(Model.Deployment deployment)
         {
             Validate(deployment);
             foreach (var sub in deployment.Subscriptions)

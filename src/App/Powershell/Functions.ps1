@@ -15,9 +15,9 @@ function Assert-ResourceGroup($resourceGroup, $subscriptionId, $location)
 }
 
 
-function Assert-AppServiceManagedCertificate($appServiceResourceGroup, $appServiceName, $cname)
+function Assert-AppServiceManagedCertificate($appServiceResourceGroup, $subscriptionId, $appServiceName, $cname)
 {
-    &$az webapp config ssl create --resource-group "$appServiceResourceGroup" --name "$appServiceName" --hostname "$cname"
+    &$az webapp config ssl create --resource-group "$appServiceResourceGroup" --name "$appServiceName" --hostname "$cname" --subscription "$subscriptionId"
         |ConvertFrom-Json   
 }
 
@@ -82,7 +82,7 @@ function Assert-TlsCnameBinding($subscriptionId, $appServiceName, $cname)
     $location = $appService.location
 
     # Will not recreate the cert if it is already created
-    $certificate = (Assert-AppServiceManagedCertificate $appServiceResourceGroup $appServiceName $cname)
+    $certificate = (Assert-AppServiceManagedCertificate $appServiceResourceGroup $subscriptionId $appServiceName $cname)
     # Not sure what is causing color corruption, but this clears it up
     [Console]::ResetColor()
     $thumbprint = $certificate.thumbprint
@@ -95,6 +95,6 @@ function Assert-TlsCnameBinding($subscriptionId, $appServiceName, $cname)
     $arm = Get-CNameToCertificateBindingArmScript $appServiceName $location $cname $thumbprint
     $tmp = New-TemporaryFile
     $arm | Out-File $tmp.FullName
-    Assert-Arm $appServiceResourceGroup $($tmp.FullName)
+    Assert-Arm $appServiceResourceGroup $subscriptionId $($tmp.FullName)
     Remove-Item $tmp
 }

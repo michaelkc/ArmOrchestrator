@@ -1,0 +1,25 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "outputs": {},
+  "parameters": {},
+  "resources": [
+    {
+      "apiVersion": "2018-02-01",
+      "location": "westeurope",
+      "name": "invalid|",
+      "properties": {
+        "name": "invalid|",
+        "perSiteScaling": false,
+        "reserved": false
+      },
+      "sku": {
+        "capacity": 2,
+        "name": "P1V2",
+        "size": "1",
+        "tier": "PremiumV2"
+      },
+      "type": "Microsoft.Web/serverfarms"
+    }
+  ]
+}
